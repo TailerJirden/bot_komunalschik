@@ -35,7 +35,7 @@ menu.add(
 )
 menu.add(
     KeyboardButton("👤 Профиль"),
-    KeyboardButton("🔄 Проверить сейчас"),
+    KeyboardButton("🔄 Проверить"),
 )
 
 # ---------- inline меню каналов ----------
@@ -75,8 +75,8 @@ class Form(StatesGroup):
 @dp.message_handler(commands="start")
 async def start(msg: types.Message):
     await msg.answer(
-        "👷 Бот-коммунальщик\n\n"
-        "Используйте кнопки ниже ⬇️",
+        "Добро пожаловать в Бот-коммунальщик👷\n\nЯ буду оповещать вас о плановых и аварийных отключениях коммунальных и инфраструктурных услуг!\n"
+        "Для работы со мной используйте кнопки ниже ⬇️",
         reply_markup=menu
     )
 
@@ -84,26 +84,26 @@ async def start(msg: types.Message):
 
 @dp.message_handler(lambda m: m.text == "🏙 Город")
 async def city(msg: types.Message):
-    await msg.answer("🏙 Введите город или `-` чтобы очистить")
+    await msg.answer("Введите город или `-` чтобы очистить")
     await Form.city.set()
 
 @dp.message_handler(state=Form.city)
 async def city_save(msg: types.Message, state):
     save_city(msg.from_user.id, None if msg.text.strip() == "-" else msg.text.strip())
-    await msg.answer("✅ Город сохранён", reply_markup=menu)
+    await msg.answer("Город сохранён✅", reply_markup=menu)
     await state.finish()
 
 # ================== УЛИЦА ==================
 
 @dp.message_handler(lambda m: m.text == "🛣 Улица")
 async def street(msg: types.Message):
-    await msg.answer("🛣 Введите улицу или `-` чтобы очистить")
+    await msg.answer("Введите улицу или `-` чтобы очистить")
     await Form.street.set()
 
 @dp.message_handler(state=Form.street)
 async def street_save(msg: types.Message, state):
     save_street(msg.from_user.id, None if msg.text.strip() == "-" else msg.text.strip())
-    await msg.answer("✅ Улица сохранена", reply_markup=menu)
+    await msg.answer("Улица сохранена✅", reply_markup=menu)
     await state.finish()
 
 # ================== РЕСУРСЫ ==================
@@ -111,7 +111,7 @@ async def street_save(msg: types.Message, state):
 @dp.message_handler(lambda m: m.text == "💡 Ресурсы")
 async def resources(msg: types.Message):
     user_resources_tmp[msg.from_user.id] = set()
-    await msg.answer("💡 Выберите ресурсы:", reply_markup=resources_kb)
+    await msg.answer("Выберите ресурсы c помощью нажатия:", reply_markup=resources_kb)
 
 @dp.callback_query_handler(lambda c: c.data.startswith("res:"))
 async def res_cb(call: types.CallbackQuery):
@@ -120,7 +120,7 @@ async def res_cb(call: types.CallbackQuery):
 
     if action == "save":
         set_resources(uid, list(user_resources_tmp.get(uid, [])))
-        await call.message.edit_text("✅ Ресурсы сохранены")
+        await call.message.edit_text("Ресурсы сохранены✅")
         return
 
     user_resources_tmp.setdefault(uid, set()).add(action)
@@ -130,7 +130,7 @@ async def res_cb(call: types.CallbackQuery):
 
 @dp.message_handler(lambda m: m.text == "📡 Каналы")
 async def channels(msg: types.Message):
-    await msg.answer("📡 Управление каналами:", reply_markup=channels_menu)
+    await msg.answer("Управление каналами:", reply_markup=channels_menu)
 
 @dp.callback_query_handler(lambda c: c.data == "ch:add")
 async def ch_add_start(call: types.CallbackQuery):
@@ -168,11 +168,11 @@ async def ch_remove(call: types.CallbackQuery):
 async def profile(msg: types.Message):
     city, street = get_user(msg.from_user.id) or (None, None)
     await msg.answer(
-        f"👤 Профиль\n\n"
-        f"Город🏙 {city or '—'}\n"
-        f"Улица🛣 {street or '—'}\n"
-        f"Ресурсы💡 {', '.join(get_resources(msg.from_user.id)) or '—'}\n"
-        f"Каналы📡 {', '.join(get_channels(msg.from_user.id)) or '—'}",
+        f"👤 Мой профиль\n\n"
+        f"🏙 Город: {city or '—'}\n"
+        f"🛣 Улица: {street or '—'}\n"
+        f"💡 Ресурсы: {', '.join(get_resources(msg.from_user.id)) or '—'}\n"
+        f"📡 Каналы: {', '.join(get_channels(msg.from_user.id)) or '—'}",
         reply_markup=menu
     )
 
@@ -196,7 +196,7 @@ async def check_sources_once(uid):
             if match_message(msg.text, city, street, resources):
                 await bot.send_message(uid, msg.text)
 
-@dp.message_handler(lambda m: m.text == "🔄 Проверить сейчас")
+@dp.message_handler(lambda m: m.text == "🔄 Проверить")
 async def check_now(msg: types.Message):
     await msg.answer("🔄 Проверяю…")
     await check_sources_once(msg.from_user.id)
